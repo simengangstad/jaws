@@ -1,12 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% init()                                                                  %
-%                                                                         %              
-% Set initial parameters for part1.slx and part2.slx                      %
-%                                                                         %
-% Created:      2018.07.12	Jon Bjørnø                                    %
-%                                                                         %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 clear all;
 
 load('supply.mat');
@@ -17,3 +8,6 @@ load('thrusters_sup.mat')
 eta0 = [0,0,0,0,0,0]';
 % Initial velocity u, v, w, p, q, r
 nu0 = [0,0,0,0,0,0]';
+
+% Load parameters
+Parameters
