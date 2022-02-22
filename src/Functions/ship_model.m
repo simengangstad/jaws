@@ -1,4 +1,4 @@
-function [xdot, u] = ship(x, u, nu_c, tau_ext)
+function [xdot, u] = ship_model(x, u, nu_c, tau_ext, parameters)
 % xdot = ship(x, u) returns the time derivative of the state vector: 
 % x = [ u v r x y psi delta n Qm]' for a ship with L = 161 m where:
 %
@@ -48,74 +48,73 @@ vc = nu_c(2);
 %% Parameters
 
 % Ship parameters 
-m = 17.0677e6;          % mass (kg)
-Iz = 2.1732e10;         % yaw moment of inertia (kg m^3)
-xg = -3.7;              % CG x-ccordinate (m)
-L = 161;                % length (m)
-B = 21.8;               % beam (m)
-T = 8.9;                % draft (m)
-KT = 0.6367;            % propeller coefficients
-KQ = 0.1390;            
-Dia = 3.3;              % propeller diameter (m)
-rho = 1025;             % density of water (m/s^3)
+m  = parameters.ship.mass;               
+Iz = parameters.ship.Iz;                % yaw moment of inertia (kg m^3)
+xg = parameters.ship.xg;                % CG x-ccordinate (m)
+L  = parameters.ship.length;             
+B  = parameters.ship.beam;               
+T  = parameters.ship.draft;              
+
+% Added mass matrix
+Xudot = parameters.added_mass.Xudot; 
+Yvdot = parameters.added_mass.Yvdot;
+Yrdot = parameters.added_mass.Yrdot; 
+Nvdot = parameters.added_mass.Nvdot;
+Nrdot = parameters.added_mass.Nrdot;
 
 % Rudder limitations
-delta_max  = 40 * pi/180;        % max rudder angle      (rad)
-Ddelta_max = 5  * pi/180;        % max rudder derivative (rad/s)
+delta_max  = parameters.rudder.max_angle;    
+Ddelta_max = parameters.rudder.max_angle_speed; 
 
-% Added mass matrix
-Xudot = -8.9830e5;
-Yvdot = -5.1996e6;
-Yrdot =  9.3677e5;
-Nvdot =  Yrdot;
-Nrdot = -2.4283e10;
-
-% Rudder coefficients
-b = 2;
-AR = 8;
-CB = 0.8;
-
-lambda = b^2 / AR;
-tR = 0.45 - 0.28*CB;
-CN = 6.13*lambda / (lambda + 2.25);
-aH = 0.75;
-xH = -0.4 * L;
-xR = -0.5 * L;
+% Propeller 
+KT  = parameters.propeller.coefficients.KT;            
+KQ  = parameters.propeller.coefficients.KQ;            
+Dia = parameters.propeller.diameter;           
+rho = parameters.propeller.density_of_water;           
 
 %% Mass matrix
-
-% Rigid-body mass matrix
-MRB = [ m 0    0 
-        0 m    m*xg
-        0 m*xg Iz ];
-
-% Added mass matrix
-MA = -[Xudot 0 0; 
-       0 Yvdot Yrdot; 
-       0 Nvdot Nrdot];
-
-Minv = inv(MRB + MA);
+Minv = inv(parameters.ship.M);
 
 %% Input matrix
-t_thr = 0.05;                                        % Thrust deduction number
-X_delta2 = 0.5 * (1 - tR) * rho * AR * CN;           % Rudder coefficients
-Y_delta = 0.25 * (1 + aH) * rho * AR * CN; 
-N_delta = 0.25 * (xR + aH*xH) * rho * AR * CN;   
+X_rudder = parameters.rudder.coefficients.X;
+Y_rudder = parameters.rudder.coefficients.Y;
+N_rudder = parameters.rudder.coefficients.N;
 
-Bi = @(u_r,delta) [ (1-t_thr)  -u_r^2 * X_delta2 * delta
-                        0      -u_r^2 * Y_delta
-                        0      -u_r^2 * N_delta            ];
+w        = parameters.propeller.wake_fraction_number; 
+
+% This is the input matrix given by both the rudder actuator
+% and the propeller
+%
+% For the rudder:
+%
+% Following Fossen (2021) p. 239 we have that the force and moment vector in
+% surge, sway and yaw (X, Y, N) is given by:
+%
+% [-X_rudder * delta^2, -Y_rudder * delta -N_rudder * delta]
+%
+% For the propeller (p. 219 in Fossen 2021):
+%
+% [(1 - w) * u, 0, 0]
+%
+% Where we model the force in surge as the forward speed multiplied with
+% a factor decided by the wake fraction number. This results in the speed 
+% of the water going into the propeller. The force is then:
+% thrust * (1 - w) * u
+
+Bi = @(u_r, delta) [ (1 - w)  -u_r^2 * X_rudder * delta
+                         0    -u_r^2 * Y_rudder
+                         0    -u_r^2 * N_rudder];
              
 %% Restoring forces (state dependent)
 
 % Restoring force for rigid-body
-CRB = m * nu_r(3) * [ 0 -1 -xg 
-                    1  0  0 
-                    xg 0  0  ];         
+CRB = m * nu_r(3) * [0 -1 -xg 
+                     1  0  0 
+                     xg 0  0];         
 
 % Restoring force for added mass 
-CA = [0 0 Yvdot * nu_r(2) + Yrdot * nu_r(3); 
-      0 0 -Xudot * nu_r(1); 
+CA = [0                                  0    Yvdot * nu_r(2) + Yrdot * nu_r(3); 
+      0                                  0    -Xudot * nu_r(1); 
       -Yvdot * nu_r(2) - Yrdot * nu_r(3) Xudot * nu_r(1) 0];    
 
 C = CRB + CA;
@@ -123,9 +122,9 @@ C = CRB + CA;
 %% Linear damping
 
 % Natural Period for Surge, Sway and Yaw (s)
-T1 = 20; 
-T2 = 20; 
-T6 = 10;     
+T1 = parameters.natural_periods.surge; 
+T2 = parameters.natural_periods.sway; 
+T6 = parameters.natural_periods.yaw;     
 
 Xu = -(m - Xudot) / T1;
 Yv = -(m - Yvdot) / T2;
@@ -162,8 +161,8 @@ d = -[Xns Ycf Ncf]';
 %% Ship dynamics
 
 % Propeller thrust and torque
-thrust = rho * Dia^4 * KT * abs(n) * n;
-Q = rho * Dia^5 * KQ * abs(n) * n; 
+thrust  = rho * Dia^4 * KT * abs(n) * n;
+Q       = rho * Dia^5 * KQ * abs(n) * n; 
 
 tau = Bi(nu_r(1), delta) * [thrust; delta];
 
@@ -181,12 +180,13 @@ if abs(delta_dot) >= Ddelta_max
 end    
 
 %% Propeller dynamics
-Im = 1e5; Tm = 10; Km = 0.6;                            % Propulsion 
-                                                        % parameters
+Im = parameters.propeller.propulsion.Im;
+Tm = parameters.propeller.propulsion.Tm;
+Km = parameters.propeller.propulsion.Km;                          
 
 Qd = rho * Dia^5 * KQ * abs(n_c) * n_c;                 % Desired torque
 
-Y = Qd/Km;                                              % Feedforward 
+Y = Qd / Km;                                            % Feedforward 
                                                         % moment controller
 Qm_dot = 1/Tm * (-Qm + Km * Y);
 n_dot =  1/Im * (Qm - Q);

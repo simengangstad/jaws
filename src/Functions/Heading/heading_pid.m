@@ -1,18 +1,21 @@
-function delta_c = heading_pid(e_psi, e_r, e_int)
+function delta_c = heading_pid(e_psi, e_r, e_int, nomoto_parameters)
     % Input:
     %
     % e_psi: error in heading
     % e_r: error in heading rate
     % e_int: integrated error
+    % nomoto_parameters: Parameters from ship model specifying the nomoto
+    % model
     %
     % Output:
     % 
     % delta_c: Rudder angle command (rad)
     
     % Nomoto time and gain constant
-    Tn = 169.5493; 
-    Kn = 0.0075;
-    wb = 0.06;
+    Tn = nomoto_parameters.Tn; 
+    Kn = nomoto_parameters.Kn;
+    wb = nomoto_parameters.wb;
+
     zeta = 1;
     wn = 1 / sqrt(1 - 2 * zeta^2 + sqrt(4 * zeta^4 - 4 * zeta^2 + 2)) * wb;
 

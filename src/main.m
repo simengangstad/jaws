@@ -3,6 +3,8 @@ clear;
 % Persistent variables in wp_selector, so we clear it
 clear wp_selector;
 
+parameters = construct_parameters();
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % USER INPUTS
@@ -21,8 +23,8 @@ Qm = 0;
 x = [nu' eta' delta n Qm]';
 
 % Ship parameters
-L = 161;
-delta_max = 40 * pi/180;        % max rudder angle (rad)
+L = parameters.ship.length;
+delta_max = parameters.rudder.max_angle;
 
 % Path following parameters
 Delta = 1800;
@@ -62,7 +64,9 @@ for i=1:Ns+1
 
     uc = Vc * cos(betaVc - x(6)); 
     vc = Vc * sin(betaVc - x(6)); 
-    nu_c = [uc vc 0]';
+    % nu_c = [uc vc 0]';
+    nu_c = [0 0 0]';
+
     
     %% Wind disturbance
 
@@ -85,10 +89,11 @@ for i=1:Ns+1
         Nwind = 0;
     end
 
-    tau_wind = [0 Ywind Nwind]';
-    
+    % tau_wind = [0 Ywind Nwind]';
+    tau_wind = [0 0 0]';
+
     %% Guidance law
-    [xk1, yk1, xk, yk, last] = wp_selector(x(4), x(5), L); 
+    [xk1, yk1, xk, yk, ~] = wp_selector(x(4), x(5), parameters.ship.length); 
     [e_y, pi_p] = cross_track_error(xk1, yk1, xk, yk, x(4), x(5));
     [psi_desired, y_int_dot] = ilos_guidance(e_y, pi_p, y_int, Delta, kappa);
     psi_ref = psi_desired;
@@ -109,7 +114,7 @@ for i=1:Ns+1
     e_r = ssa(x(3) - r_desired);
 
     % Now we retrieve the rudder angle command from the heading PID
-    delta_c = heading_pid(e_psi, e_r, e_psi_int); 
+    delta_c = heading_pid(e_psi, e_r, e_psi_int, parameters.nomoto); 
     
     % Anti-integrator windup
     if abs(delta_c) >= delta_max
@@ -123,11 +128,11 @@ for i=1:Ns+1
     e_u = x(1) - u_desired;
 
     % Here n_c is the rps of the motor (n) commanded 
-    n_c = speed_pid(u_desired, e_u, e_u_int);
+    n_c = speed_pid(u_desired, e_u, e_u_int, parameters);
 
     %% Ship dynamics
     u = [delta_c n_c]';
-    [xdot, u] = ship(x, u, nu_c, tau_wind);
+    [xdot, u] = ship_model(x, u, nu_c, tau_wind, parameters);
     
     %% Store simulation data in a table (for testing)
     simdata(i,:) = [t x(1:3)' x(4:6)' x(7) x(8) u(1) u(2)...
@@ -141,6 +146,9 @@ for i=1:Ns+1
     y_int = euler2(y_int_dot, y_int, h);
 
 end
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PLOTS
