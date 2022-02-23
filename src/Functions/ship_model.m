@@ -148,8 +148,10 @@ Ycf = 0;
 Ncf = 0;
 dx = L/10;                                                  % 10 strips
 Cd_2D = Hoerner(B, T);
+xLs = -L/2:dx:L/2;
 
-for xL = -L/2:dx:L/2
+for i = 1:length(xLs)
+    xL = xLs(i);
     Ucf = abs(nu_r(2) + xL * nu_r(3)) * (nu_r(2) + xL * nu_r(3));
 
     Ycf = Ycf - 0.5 * rho * T * Cd_2D * Ucf * dx;           % Sway force

@@ -1,5 +1,7 @@
 function parameters = construct_parameters()
 
+parameters.simulation.step_size = 0.05;
+
 %% Ship 
 
 m                       = 17.0677e6;     % mass (kg)
@@ -122,6 +124,10 @@ parameters.nomoto.Tn = 169.5493;
 parameters.nomoto.Kn = 0.0075;
 parameters.nomoto.wb = 0.06;
 
+%% Guidance
+
+parameters.guidance.look_ahead = 1800;
+parameters.guidance.kappa      = 1.5;
 
 %% Controllers
 

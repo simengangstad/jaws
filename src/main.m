@@ -23,12 +23,12 @@ Qm = 0;
 x = [nu' eta' delta n Qm]';
 
 % Ship parameters
-L = parameters.ship.length;
-delta_max = parameters.rudder.max_angle;
+L           = parameters.ship.length;
+delta_max   = parameters.rudder.max_angle;
 
 % Path following parameters
-Delta = 1800;
-kappa = 1.5;
+look_ahead_distance = parameters.guidance.look_ahead;
+kappa               = parameters.guidance.kappa;
 
 % Wind expressed in NED
 Vw = 1;
@@ -66,7 +66,6 @@ for i=1:Ns+1
     vc = Vc * sin(betaVc - x(6)); 
     % nu_c = [uc vc 0]';
     nu_c = [0 0 0]';
-
     
     %% Wind disturbance
 
@@ -91,11 +90,11 @@ for i=1:Ns+1
 
     % tau_wind = [0 Ywind Nwind]';
     tau_wind = [0 0 0]';
-
+        
     %% Guidance law
     [xk1, yk1, xk, yk, ~] = wp_selector(x(4), x(5), parameters.ship.length); 
     [e_y, pi_p] = cross_track_error(xk1, yk1, xk, yk, x(4), x(5));
-    [psi_desired, y_int_dot] = ilos_guidance(e_y, pi_p, y_int, Delta, kappa);
+    [psi_desired, y_int_dot] = ilos_guidance(e_y, pi_p, y_int, look_ahead_distance, kappa);
     psi_ref = psi_desired;
 
     %% Heading control

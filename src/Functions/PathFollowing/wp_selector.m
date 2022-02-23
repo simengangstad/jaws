@@ -3,10 +3,10 @@ function [xk1, yk1, xk, yk, last] = wp_selector(x, y, L)
     persistent first k WP_ R_k_1
 
     if isempty(first)
-        load('WP.mat');
+        WP = load('WP.mat');
         first = 0;
         k = 1;
-        WP_ = [WP(1,:), WP(2,:)];
+        WP_ = [WP.WP(1,:), WP.WP(2,:)];
         R_k_1 = 4 * L;
     end
 
