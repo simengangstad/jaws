@@ -15,7 +15,7 @@ Ns = 60000;         % no. of samples
 U_ref = 9;          % desired surge speed (m/s)
 
 % Initial states
-eta = [0.1 0 deg2rad(-110)]';
+eta = [0 0 0]';
 nu  = [0 0 0]';
 delta = 0;
 n = 0;
@@ -64,8 +64,7 @@ for i=1:Ns+1
 
     uc = Vc * cos(betaVc - x(6)); 
     vc = Vc * sin(betaVc - x(6)); 
-    % nu_c = [uc vc 0]';
-    nu_c = [0 0 0]';
+    nu_c = [uc vc 0]';
     
     %% Wind disturbance
 
@@ -88,8 +87,7 @@ for i=1:Ns+1
         Nwind = 0;
     end
 
-    % tau_wind = [0 Ywind Nwind]';
-    tau_wind = [0 0 0]';
+    tau_wind = [0 Ywind Nwind]';
         
     %% Guidance law
     [xk1, yk1, xk, yk, ~] = wp_selector(x(4), x(5), parameters.ship.length); 
