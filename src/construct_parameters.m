@@ -45,11 +45,16 @@ MA = -[Xudot    0       0;
        0        Nvdot   Nrdot];
 
 parameters.ship.M = MRB + MA;
+parameters.ship.Minv = inv(parameters.ship.M);
+
+% Hoerner for damping
+
+parameters.ship.Cd_2D = Hoerner(parameters.ship.beam, parameters.ship.draft);
 
 %% Rudder
 
 % Limitations
-parameters.rudder.max_angle       = 40 * pi/180;   
+parameters.rudder.max_angle       = 70 * pi/180;   
 parameters.rudder.max_angle_speed = 5  * pi/180;   
 
 % Coefficients

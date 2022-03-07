@@ -73,7 +73,7 @@ Dia = parameters.propeller.diameter;
 rho = parameters.propeller.density_of_water;           
 
 %% Mass matrix
-Minv = inv(parameters.ship.M);
+Minv = parameters.ship.Minv;
 
 %% Input matrix
 X_rudder = parameters.rudder.coefficients.X;
@@ -82,29 +82,6 @@ N_rudder = parameters.rudder.coefficients.N;
 
 w        = parameters.propeller.wake_fraction_number; 
 
-% This is the input matrix given by both the rudder actuator
-% and the propeller
-%
-% For the rudder:
-%
-% Following Fossen (2021) p. 239 we have that the force and moment vector in
-% surge, sway and yaw (X, Y, N) is given by:
-%
-% [-X_rudder * delta^2, -Y_rudder * delta -N_rudder * delta]
-%
-% For the propeller (p. 219 in Fossen 2021):
-%
-% [(1 - w) * u, 0, 0]
-%
-% Where we model the force in surge as the forward speed multiplied with
-% a factor decided by the wake fraction number. This results in the speed 
-% of the water going into the propeller. The force is then:
-% thrust * (1 - w) * u
-
-Bi = @(u_r, delta) [ (1 - w)  -u_r^2 * X_rudder * delta
-                         0    -u_r^2 * Y_rudder
-                         0    -u_r^2 * N_rudder];
-             
 %% Restoring forces (state dependent)
 
 % Restoring force for rigid-body
@@ -147,7 +124,7 @@ Xns = -0.5 * rho * S * (1+k) * Cf * abs(nu_r(1)) * nu_r(1);
 Ycf = 0; 
 Ncf = 0;
 dx = L/10;                                                  % 10 strips
-Cd_2D = Hoerner(B, T);
+Cd_2D = parameters.ship.Cd_2D;
 xLs = -L/2:dx:L/2;
 
 for i = 1:length(xLs)
@@ -166,7 +143,27 @@ d = -[Xns Ycf Ncf]';
 thrust  = rho * Dia^4 * KT * abs(n) * n;
 Q       = rho * Dia^5 * KQ * abs(n) * n; 
 
-tau = Bi(nu_r(1), delta) * [thrust; delta];
+% This is the input matrix given by both the rudder actuator
+% and the propeller
+%
+% For the rudder:
+%
+% Following Fossen (2021) p. 239 we have that the force and moment vector in
+% surge, sway and yaw (X, Y, N) is given by:
+%
+% [-X_rudder * delta^2, -Y_rudder * delta -N_rudder * delta]
+%
+% For the propeller (p. 219 in Fossen 2021):
+%
+% [(1 - w) * u, 0, 0]
+%
+% Where we model the force in surge as the forward speed multiplied with
+% a factor decided by the wake fraction number. This results in the speed 
+% of the water going into the propeller. The force is then:
+% thrust * (1 - w) * u
+tau = [(1 - w)  -nu_r(1)^2 * X_rudder * delta
+        0       -nu_r(1)^2 * Y_rudder
+        0       -nu_r(1)^2 * N_rudder] * [thrust; delta];
 
 nu_dot = [nu(3) * vc -nu(3) * uc 0]' + Minv * (tau_ext + tau - (C + D) * nu_r - d); 
 eta_dot = Rzyx(0, 0, eta(3)) * nu;    

@@ -1,3 +1,5 @@
+function main()
+
 clear;
 
 % Persistent variables in wp_selector, so we clear it
@@ -5,17 +7,29 @@ clear wp_selector;
 
 parameters = construct_parameters();
 
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% USER INPUTS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-h  = 0.1;           % sampling time [s]
-Ns = 60000;         % no. of samples
+%% Waypoints & spline
+scale = 100;
+frequency = 1;
+waypoints.x = scale * [0 0 100 100 200 200 300 300 400 400 500 500];
+waypoints.y = scale * [0 375 375 125 125 375 375 125 125 375 375 0];
+waypoints.time = frequency * [0 10 32 42 67 77 100 110 135 145 173 193];
 
-U_ref = 9;          % desired surge speed (m/s)
+timespan = 0:1:max(waypoints.time);
+x_s = spline(waypoints.time, waypoints.x, timespan);
+y_s = spline(waypoints.time, waypoints.y, timespan);
+
+waypoints = [x_s; y_s];
+waypoint_index = 1;
+
+%% Setup
+h  = parameters.simulation.step_size;       % sampling time [s]
+total_time = 3600*20;
+Ns = total_time / h;                        % no. of samples
+
+U_ref = 1.5;                                % desired surge speed (m/s)
 
 % Initial states
-eta = [0 0 0]';
+eta = [0 0 pi / 2]';
 nu  = [0 0 0]';
 delta = 0;
 n = 0;
@@ -43,6 +57,8 @@ Vc = 1;
 betaVc = deg2rad(45);
 
 % Heading reference model & control
+psi_ref = 0;
+y_int_dot = 0;
 psi_ref_x = [0; 0; 0];
 e_psi_int = 0;
 y_int = 0;
@@ -56,6 +72,8 @@ e_u_int = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 simdata = zeros(Ns+1,14);       % table of simulation data
 
+next_waypoints = [];
+
 for i=1:Ns+1
     
     t = (i-1) * h;              % time (s)
@@ -64,8 +82,9 @@ for i=1:Ns+1
 
     uc = Vc * cos(betaVc - x(6)); 
     vc = Vc * sin(betaVc - x(6)); 
-    nu_c = [uc vc 0]';
-    
+    % nu_c = [uc vc 0]';
+    nu_c = [0 0 0]';
+
     %% Wind disturbance
 
     % Wind velocity in world frame
@@ -78,22 +97,42 @@ for i=1:Ns+1
     V_rw = sqrt(u_rw^2 + v_rw^2); 
     gamma_rw = -atan2(v_rw, u_rw);
     
-    % Turn on wind under simulation to see the effect
-    if t > 200
-        Ywind = 0.5 * rho_a * V_rw^2 * cy*sin(gamma_rw) * A_Lw;
-        Nwind = 0.5 * rho_a * V_rw^2 * cn*sin(2*gamma_rw) * A_Lw*L;
-    else
-        Ywind = 0;
-        Nwind = 0;
-    end
+    Ywind = 0.5 * rho_a * V_rw^2 * cy * sin(gamma_rw) * A_Lw;
+    Nwind = 0.5 * rho_a * V_rw^2 * cn * sin(2 * gamma_rw) * A_Lw * L;
 
-    tau_wind = [0 Ywind Nwind]';
+    % tau_wind = [0 Ywind Nwind]';
+    tau_wind = [0 0 0]';
         
     %% Guidance law
-    [xk1, yk1, xk, yk, ~] = wp_selector(x(4), x(5), parameters.ship.length); 
-    [e_y, pi_p] = cross_track_error(xk1, yk1, xk, yk, x(4), x(5));
-    [psi_desired, y_int_dot] = ilos_guidance(e_y, pi_p, y_int, look_ahead_distance, kappa);
-    psi_ref = psi_desired;
+    
+    % [xk1, yk1, xk, yk, ~] = wp_selector(x(4), x(5), parameters.ship.length); 
+    % [e_y, pi_p] = cross_track_error(xk1, yk1, xk, yk, x(4), x(5));
+    % [psi_desired, y_int_dot] = ilos_guidance(e_y, pi_p, y_int, look_ahead_distance, kappa);
+    % psi_ref = psi_desired;
+
+    [current_waypoint, waypoint_index] = closest_waypoint(x(4:5), waypoints, waypoint_index);
+
+    if waypoint_index < length(waypoints)
+        next_waypoint = waypoints(:, waypoint_index + 1);
+    else
+        next_waypoint = waypoints(:, waypoint_index);
+    end
+    
+    % [next_waypoint, found] = find_farthest_point_spanned_by_circle(2000, waypoints, waypoint_index);
+
+    found = true;
+    if found
+        [e_y, pi_p] = cross_track_error(next_waypoint(1), ...
+                                        next_waypoint(2), ...
+                                        current_waypoint(1), ...
+                                        current_waypoint(2), ...
+                                        x(4), ...
+                                        x(5));
+        [psi_desired, y_int_dot] = ilos_guidance(e_y, pi_p, y_int, look_ahead_distance, kappa);
+        psi_ref = psi_desired;
+        
+        next_waypoints = [next_waypoints; next_waypoint'];
+    end
 
     %% Heading control
 
@@ -112,9 +151,9 @@ for i=1:Ns+1
 
     % Now we retrieve the rudder angle command from the heading PID
     delta_c = heading_pid(e_psi, e_r, e_psi_int, parameters.nomoto); 
-    
+
     % Anti-integrator windup
-    if abs(delta_c) >= delta_max
+    if abs(delta_c) > delta_max
        delta_c = delta_max * sign(delta_c);
        e_psi_int = e_psi_int - h * e_psi;
        y_int = y_int - h * y_int_dot;
@@ -136,11 +175,24 @@ for i=1:Ns+1
                     u_desired psi_desired r_desired];     
  
     % Euler integration
-    x = euler2(xdot, x, h);    
-    psi_ref_x = euler2(psi_ref_x_dot, psi_ref_x, h);
-    e_psi_int = euler2(e_psi, e_psi_int, h);
-    e_u_int = euler2(e_u, e_u_int, h);
-    y_int = euler2(y_int_dot, y_int, h);
+    
+    % Make integration in batch to save some time
+    s     = [x; psi_ref_x; e_psi_int; e_u_int; y_int];
+    s_dot = [xdot; psi_ref_x_dot; e_psi; e_u; y_int_dot];
+    
+    s = euler2(s_dot, s, h);
+
+    x = s(1:9);
+    psi_ref_x = s(10:12);
+    e_psi_int = s(13);
+    e_u_int = s(14);
+    y_int = s(15);
+% 
+%     x = euler2(xdot, x, h);
+%     psi_ref_x = euler2(psi_ref_x_dot, psi_ref_x, h);
+%     e_psi_int = euler2(e_psi, e_psi_int, h);
+%     e_u_int = euler2(e_u, e_u_int, h);
+%     y_int = euler2(y_int_dot, y_int, h);
 
 end
 
@@ -196,4 +248,5 @@ plot(t,delta,t,delta_c,'linewidth',2);
 title('Actual and commanded rudder angles (deg)'); xlabel('time (s)');
 legend(["Actual", "Desired"]);
 
-pathplotter(x, y);
+pathplotter(x, y, [x_s; y_s], next_waypoints');
+end
