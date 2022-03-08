@@ -84,13 +84,14 @@ for i=1:Ns+1
     %% Guidance law
     [current_waypoint, waypoint_index] = closest_waypoint(x(4:5), waypoints, waypoint_index);
     
-    radius = 1000 * (1 - 175 * K(waypoint_index));
-
-    [next_waypoint, found] = find_farthest_point_spanned_by_circle(radius, waypoints, waypoint_index);
-
-    if ~found
-        next_waypoint = waypoints(:, waypoint_index + 1)';
-    end
+%     radius = 1000 * (1 - 175 * K(waypoint_index));
+%
+%     [next_waypoint, found] = find_farthest_point_spanned_by_circle(radius, waypoints, waypoint_index);
+% 
+%     if true
+%         next_waypoint = waypoints(:, waypoint_index + 1)';
+%     end
+    
     next_waypoint = waypoints(:, waypoint_index + 1)';
 
     [e_y, pi_p] = cross_track_error(next_waypoint(1), ...
