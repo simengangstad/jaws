@@ -16,7 +16,7 @@ function delta_c = heading_pid(e_psi, e_r, e_int, nomoto_parameters)
     Kn = nomoto_parameters.Kn;
     wb = nomoto_parameters.wb;
 
-    zeta = 1;
+    zeta = 0.8;
     wn = 1 / sqrt(1 - 2 * zeta^2 + sqrt(4 * zeta^4 - 4 * zeta^2 + 2)) * wb;
 
     % PID gains based on first-order Nomoto model 

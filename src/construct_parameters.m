@@ -4,51 +4,40 @@ parameters.simulation.step_size = 0.05;
 
 %% Ship 
 
-m                       = 17.0677e6;     % mass (kg)
-Iz                      = 2.1732e10;     % yaw moment of inertia (kg m^3)
-xg                      = -3.7;          % CG x-ccordinate (m)
+m                       = 6000e3;     % mass (kg)
+L = 76.2;
 
-parameters.ship.mass    = m;             
-parameters.ship.Iz      = Iz;            
-parameters.ship.xg      = xg;            
-parameters.ship.length  = 161;           % length (m)
+parameters.ship.mass    = m;                       
+parameters.ship.length  = L;          % length (m)
 parameters.ship.beam    = 21.8;          % beam (m)
 parameters.ship.draft   = 8.9;           % draft (m)         
 
-% Added mass matrix
-Xudot = -8.9830e5;
-Yvdot = -5.1996e6;
-Yrdot =  9.3677e5;
-Nvdot =  Yrdot;
-Nrdot = -2.4283e10;
-
-parameters.added_mass.Xudot = Xudot;
-parameters.added_mass.Yvdot = Yvdot;
-parameters.added_mass.Yrdot = Yrdot;
-parameters.added_mass.Nvdot = Nvdot;
-parameters.added_mass.Nrdot = Nrdot;
 
 % Natural periods
-parameters.natural_periods.surge    = 20;
-parameters.natural_periods.sway     = 20;
-parameters.natural_periods.yaw      = 10;
+parameters.natural_periods.surge    = 87.8131;
 
+% Normalization variables
+g    =  9.81;                           % acceleration of gravity (m/s^2)
 
-% Rigid-body mass matrix
-MRB = [parameters.ship.mass   0       0 
-       0   m       m * xg
-       0   m * xg  Iz];
+T    = diag([1 1 1/L]);
+Tinv = diag([1 1 L]);
 
-% Added mass matrix
-MA = -[Xudot    0       0; 
-       0        Yvdot   Yrdot; 
-       0        Nvdot   Nrdot];
+% Model matricses
+Mbis = [1.1274         0          0
+             0    1.8902    -0.0744
+             0   -0.0744     0.1278];
 
-parameters.ship.M = MRB + MA;
+Dbis = [0.0358        0        0
+             0        0.1183  -0.0124
+             0       -0.0041   0.0308];
+ 
+
+parameters.ship.M = (m*Tinv^2)*(T*Mbis*Tinv);
 parameters.ship.Minv = inv(parameters.ship.M);
+parameters.ship.D = (m*Tinv^2)*(sqrt(g/L)*T*Dbis*Tinv);
+
 
 % Hoerner for damping
-
 parameters.ship.Cd_2D = Hoerner(parameters.ship.beam, parameters.ship.draft);
 
 %% Rudder
@@ -125,29 +114,14 @@ parameters.propeller.propulsion.Km = 0.6;
 
 %% Nomoto model
 
-parameters.nomoto.Tn = 169.5493; 
+parameters.nomoto.Tn = 11.4117; 
 parameters.nomoto.Kn = 0.0075;
 parameters.nomoto.wb = 0.06;
 
 %% Guidance
 
-parameters.guidance.look_ahead = 1800;
-parameters.guidance.kappa      = 1.5;
-
-%% Controllers
-
-% Surge controller
-% surge_lambda = 1;
-% 
-% % Surge reference model
-% surge_omega_n = 0.01;
-% surge_zeta = 1; 
-%    
-% % Course controller
-% yaw_omega_n = 0.06;
-% yaw_T = 169;
-
-
+parameters.guidance.look_ahead = parameters.ship.length * 4;
+parameters.guidance.kappa      = 0.01;
 
 end
 
