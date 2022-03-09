@@ -15,15 +15,14 @@ function nd = speed_pid(Ud, e_u, e_int, parameters)
     Dia     = parameters.propeller.diameter;           
     rho     = parameters.propeller.density_of_water;
     m       = parameters.ship.mass;
-    Xudot   = parameters.added_mass.Xudot;
     T1      = parameters.natural_periods.surge;
     
-    Xu      = -(m - Xudot) / T1;
+    Xu      = -m / T1;
     Td      = -Xu * Ud / (1 - w);                   % Desired thrust
 
     % PI controller gains
-    Kp = 0.5;
-    Ki = 0.05;
+    Kp = 0.7;
+    Ki = 0.005;
     delta_u = -Kp * e_u - Ki * e_int;
 
     % Desired propeller speed (rps)
