@@ -143,6 +143,14 @@ parameters.guidance.kappa      = 1.5;
 % yaw_T = 169;
 
 
+%% Current parameters
+parameters.envloads.Current_dir     = -90;
+parameters.envloads.Current_vel     = 0.2;
+
+%% wind parameters
+parameters.envloads.Vw = 1;
+parameters.envloads.betaVw = deg2rad(135);
+
 
 end
 
