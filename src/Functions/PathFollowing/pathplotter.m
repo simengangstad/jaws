@@ -1,4 +1,4 @@
-function pathplotter(x1, y1, x2, y2, waypoints, guidance_waypoints)
+function pathplotter(x1, y1, x2, y2, x_offset, y_offset, waypoints, guidance_waypoints)
 % pathplotter(x,y) converts NE-positions to longitude and latitude coordinates
 % and plots these coordinates over a map using geoplot.
 %
@@ -63,6 +63,11 @@ geoplot(mu1, l1, 'r-');
 l2 = wrapTo360(rad2deg(l2)); 
 mu2 = rad2deg(mu2);
 geoplot(mu2, l2, 'y-');
+
+[l_offset, mu_offset, ~] = flat2llh(x_offset, y_offset, zeros(1, length(x2)), l_0, mu_0, 0);
+l_offset = wrapTo360(rad2deg(l_offset)); 
+mu_offset = rad2deg(mu_offset);
+geoplot(mu_offset, l_offset, 'c-');
 hold off
 
 end
