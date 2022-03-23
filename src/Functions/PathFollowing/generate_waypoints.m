@@ -1,6 +1,6 @@
 function [x, y, K] = generate_waypoints()
 
-x_scale = 20;
+x_scale = 40;
 y_scale = 20;
 frequency = 1;
 x = x_scale * [0 0 150 150 300 300 450 450 600 600 750 750];
