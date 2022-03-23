@@ -1,9 +1,10 @@
 function [x, y, K] = generate_waypoints()
 
-scale = 20;
+x_scale = 40;
+y_scale = 20;
 frequency = 1;
-x = scale * [0 0 150 150 300 300 450 450 600 600 750 750];
-y = scale * [0 400 400 0 0 400 400 0 0 400 400 0];
+x = x_scale * [0 0 150 150 300 300 450 450 600 600 750 750];
+y = y_scale * [0 400 400 0 0 400 400 0 0 400 400 0];
 time_points = frequency * [0 10 32 42 64 74 96 106 128 138 160 170];
 
 timespan = 0:1:max(time_points);
