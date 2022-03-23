@@ -3,8 +3,8 @@ function [point, index] = closest_waypoint(vessel_position, waypoints, start_ind
     prev_distance = sqrt((waypoints(1, start_index) - vessel_position(1))^2 + ... 
                          (waypoints(2, start_index) - vessel_position(2))^2);
     
-    i = start_index + 1;
-    
+    index = start_index + 1;
+
     for i = start_index + 1:length(waypoints)
         x = waypoints(1, i);
         y = waypoints(2, i);
@@ -19,9 +19,9 @@ function [point, index] = closest_waypoint(vessel_position, waypoints, start_ind
         end
 
         prev_distance = current_distance;
+        index = i;
     end
     
-    index = i;
-    point = waypoints(:, i);
+    point = waypoints(:, index);
 end
 

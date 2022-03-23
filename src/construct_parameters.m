@@ -128,8 +128,14 @@ parameters.guidance.kappa      = 0.01;
 parameters.envloads.Current_dir     = -90;
 parameters.envloads.Current_vel     = 0.2;
 
-%% wind parameters
+%% Wind parameters
 parameters.envloads.Vw = 1;
 parameters.envloads.betaVw = deg2rad(135);
+
+%% Constant bearing
+
+parameters.CB.Delta = 100;
+parameters.CB.U_max = 0.5;
+
 end
 
