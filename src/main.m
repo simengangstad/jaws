@@ -13,7 +13,7 @@ waypoints                               = [waypoints_x; waypoints_y];
 
 %% Simulation
 
-output = sim('model', 4 * 3600);
+output = sim('model', 1 * 3600);
 
 timespan = output.vessel1_data.Time;
 
@@ -45,7 +45,7 @@ figure();
 subplot(2, 2, 1);
 pathplotter(x1, y1, x2, y2, x_offset, y_offset, waypoints);
 title("Position of Vessels");
-legend(["Target path", "Vessel 1", "Target path for Vessel 2", "Vessel 2"]);
+legend(["Target path for Vessel 1", "Vessel 1", "Target path for Vessel 2", "Vessel 2"]);
 
 subplot(2, 2, 2);
 plot(timespan, speed_vessel_1, timespan, speed_vessel_2);

@@ -45,6 +45,8 @@ function [speed, heading, target_position_offset] = constant_bearing(target_posi
         offset = span * Rzyx(0, 0, -pi / 2) * target_velocity_ned / norm(target_velocity_ned);
         offset = offset(1:2);
         target_position_offset = target_position + offset;
+    else
+        target_position_offset = current_waypoint';
     end
 
     position_error = vessel_position - target_position_offset;
