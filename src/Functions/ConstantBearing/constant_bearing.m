@@ -6,7 +6,7 @@ function [speed, heading, target_position_offset] = constant_bearing(target_posi
         y_int = 0;
     end
 
-    span = 500;
+    span = parameters.nominal.span;
 
     current_waypoint = waypoints(:, waypoint_index)';
     next_waypoint = waypoints(:, waypoint_index + 1)';

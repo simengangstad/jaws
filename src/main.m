@@ -12,8 +12,7 @@ parameters                              = construct_parameters();
 waypoints                               = [waypoints_x; waypoints_y];
 
 %% Simulation
-
-output = sim('model', 18 * 3600);
+output = sim('model', parameters.end_time);
 
 timespan = output.vessel1_data.Time;
 
