@@ -13,7 +13,7 @@ waypoints                               = [waypoints_x; waypoints_y];
 
 %% Simulation
 
-output = sim('model', 1 * 3600);
+output = sim('model', 18 * 3600);
 
 timespan = output.vessel1_data.Time;
 

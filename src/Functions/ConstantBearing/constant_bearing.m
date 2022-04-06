@@ -35,13 +35,11 @@ function [speed, heading, target_position_offset] = constant_bearing(target_posi
     if abs(rudder_angle_commanded) <= parameters.rudder.max_angle
         y_int = euler2(y_int_dot, y_int, parameters.simulation.step_size);
     end
-        
-
 
     target_velocity_ned = Rzyx(0, 0, target_psi) * [target_velocity(1); target_velocity(2); 0];
     target_position_offset = target_position;
 
-    if norm(target_velocity_ned) > 1e-3
+    if norm(target_velocity_ned) > 1e-1
         offset = span * Rzyx(0, 0, -pi / 2) * target_velocity_ned / norm(target_velocity_ned);
         offset = offset(1:2);
         target_position_offset = target_position + offset;
