@@ -1,3 +1,4 @@
+clc;
 clear;
 
 %% Parameters and data
@@ -7,11 +8,17 @@ load('thrusters_sup.mat');
 load('wind_coeff3.mat');
 load('net_modeling.mat');
 
+simulation_id = "050";
+
 parameters                              = construct_parameters();
+parameters.nominal.speed = 0.5;
+
 [waypoints_x, waypoints_y, waypoints_K] = generate_waypoints();
 waypoints                               = [waypoints_x; waypoints_y];
 
+
 %% Simulation
+fprintf("Time to simulate: %f hours\r\n", parameters.end_time / 3600);
 output = sim('model', parameters.end_time);
 
 timespan = output.vessel1_data.Time;
@@ -76,11 +83,22 @@ xlabel("Time [s]");
 ylabel("Angle [rad]")
 grid on;
 
-%% Plot net data
+saveas(gcf, sprintf("data/output/%s", simulation_id), "epsc")
+
+%% Save net data
 
 span              = sqrt((x1 - x2).^2 + (y1 - y2).^2);
 netforce_vessel_1 = sqrt(data_vessel_1(:, 7).^2 + data_vessel_1(:, 8).^2);
 netforce_vessel_2 = sqrt(data_vessel_2(:, 9).^2 + data_vessel_2(:, 10).^2);
+
+net_data = zeros(3, length(timespan));
+net_data(1, :) = timespan;
+net_data(2, :) = span;
+net_data(3, :) = netforce_vessel_1;
+
+save(sprintf("data/output/%s.mat", simulation_id), "net_data");
+
+%% Plot net data
 
 figure();
 subplot(2, 2, 1);

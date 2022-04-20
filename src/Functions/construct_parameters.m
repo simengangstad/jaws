@@ -12,7 +12,7 @@ parameters.ship.length  = L;          % length (m)
 parameters.ship.beam    = 21.8;          % beam (m)
 parameters.ship.draft   = 8.9;           % draft (m)         
 
-parameters.nominal.speed = 1.5;
+parameters.nominal.speed = 0.75;
 parameters.nominal.span = 520;
 parameters.total_kg_endpoint = 1000;
 parameters.waste_density = 0.0000649;    % kg / m^2
