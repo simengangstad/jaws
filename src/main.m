@@ -8,16 +8,16 @@ load('thrusters_sup.mat');
 load('wind_coeff3.mat');
 load('net_modeling.mat');
 
-simulation_id = "050";
+simulation_id = "030";
 
 parameters                              = construct_parameters();
-parameters.nominal.speed = 0.5;
 
 [waypoints_x, waypoints_y, waypoints_K] = generate_waypoints();
 waypoints                               = [waypoints_x; waypoints_y];
 
 
 %% Simulation
+fprintf("Speed %d, span: %d\r\n", parameters.nominal.speed, parameters.nominal.span);
 fprintf("Time to simulate: %f hours\r\n", parameters.end_time / 3600);
 output = sim('model', parameters.end_time);
 
@@ -48,20 +48,22 @@ rudder_angle_commanded_vessel_2     = data_vessel_2(:, 14);
 propeller_speed_commanded_vessel_2  = data_vessel_2(:, 15) * 60;
 
 figure();
-subplot(2, 2, 1);
 pathplotter(x1, y1, x2, y2, x_offset, y_offset, waypoints);
 title("Position of Vessels");
 legend(["Target path for Vessel 1", "Vessel 1", "Target path for Vessel 2", "Vessel 2"]);
 
-subplot(2, 2, 2);
+saveas(gcf, sprintf("data/output/%s_position", simulation_id), "epsc")
+
+figure();
+subplot(3, 1, 1);
 plot(timespan, speed_vessel_1, timespan, speed_vessel_2);
 title("Speed");
-xlabel("Timee [s]");
+xlabel("Time [s]");
 ylabel("Speed [m/s]")
 legend(["Vessel 1", "Vessel 2"]);
 grid on;
 
-subplot(2, 2, 3);
+subplot(3, 1, 2);
 plot(timespan, propeller_speed_vessel_1, ...
      timespan, propeller_speed_commanded_vessel_1, ...
      timespan, propeller_speed_vessel_2, ...
@@ -72,7 +74,7 @@ xlabel("Time [s]");
 ylabel("Propeller speed [RPM]")
 grid on;
 
-subplot(2, 2, 4);
+subplot(3, 1, 3);
 plot(timespan, rudder_angle_vessel_1, ...
      timespan, rudder_angle_commanded_vessel_1, ...
      timespan, rudder_angle_vessel_2, ...
@@ -83,7 +85,7 @@ xlabel("Time [s]");
 ylabel("Angle [rad]")
 grid on;
 
-saveas(gcf, sprintf("data/output/%s", simulation_id), "epsc")
+saveas(gcf, sprintf("data/output/%s_data", simulation_id), "epsc")
 
 %% Save net data
 
@@ -101,17 +103,19 @@ save(sprintf("data/output/%s.mat", simulation_id), "net_data");
 %% Plot net data
 
 figure();
-subplot(2, 2, 1);
+subplot(2, 1, 1);
 plot(timespan, span);
 title("Net span");
 xlabel("Time [s]");
 ylabel("Span [m]");
 grid on;
 
-subplot(2, 2, 2);
+subplot(2, 1, 2);
 plot(timespan, netforce_vessel_1, timespan, netforce_vessel_2);
 title("Force from net on vessels");
 legend(["Vessel 1", "Vessel 2"]);
 xlabel("Time [s]");
 ylabel("Force [N]")
 grid on;
+
+saveas(gcf, sprintf("data/output/%s_net", simulation_id), "epsc")
