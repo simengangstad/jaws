@@ -12,21 +12,21 @@ parameters.ship.length  = L;          % length (m)
 parameters.ship.beam    = 21.8;          % beam (m)
 parameters.ship.draft   = 8.9;           % draft (m)         
 
-parameters.nominal.speed = 0.3;
-parameters.nominal.span = 750;
+parameters.nominal.speed = 1.5;
+parameters.nominal.span = 670;
 parameters.total_kg_endpoint = 1000;
-parameters.waste_density = 0.0000649;    % kg / m^2
-
-parameters.end_time = parameters.total_kg_endpoint / ...
-                     (parameters.nominal.speed * ...
-                      parameters.nominal.span * ...
-                      parameters.waste_density);
 
 % This comes from Ocean Cleanup reporting 1000 kg per 24 hour. 
 % We assume 16 hours of operation, thus 1000 kg / 16 hr = 62.5 kg /hr
 %
 % Ocean Cleanup's vessel have an average speed of 1 knot = 0.514444444 m/s
-parameters.waste_density = 62.5 / (parameters.nominal.span * 3600 * 0.514444444);
+% And a reported nominal span of 520
+parameters.waste_density = 62.5 / (520 * 3600 * 0.514444444);
+
+parameters.end_time = parameters.total_kg_endpoint / ...
+                     (parameters.nominal.speed * ...
+                      parameters.nominal.span * ...
+                      parameters.waste_density);
 
 % Natural periods
 parameters.natural_periods.surge    = 87.8131;

@@ -8,7 +8,7 @@ load('thrusters_sup.mat');
 load('wind_coeff3.mat');
 load('net_modeling.mat');
 
-simulation_id = "030";
+simulation_id = "100";
 
 parameters                              = construct_parameters();
 
