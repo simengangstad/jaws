@@ -12,8 +12,8 @@ parameters.ship.length  = L;          % length (m)
 parameters.ship.beam    = 21.8;          % beam (m)
 parameters.ship.draft   = 8.9;           % draft (m)         
 
-parameters.nominal.speed = 1.5;
-parameters.nominal.span = 670;
+parameters.nominal.speed = 1.0;
+parameters.nominal.span = 570;
 parameters.total_kg_endpoint = 1000;
 
 % This comes from Ocean Cleanup reporting 1000 kg per 24 hour. 
